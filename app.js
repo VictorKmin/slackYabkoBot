@@ -4,8 +4,6 @@ const axios = require('axios');
 
 const app = express();
 
-
-const privatURL = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5'
 let previousData = [
   {
     ccy: "USD",
@@ -39,7 +37,7 @@ app.listen(3333, () => {
 })
 
 async function yabkoGetter() {
-  const result = await axios.get(privatURL);
+  const result = await axios.get('https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5');
   console.log(result.data);
 
   const [stareYabko, staraGrushka] = previousData
@@ -51,13 +49,24 @@ async function yabkoGetter() {
   const grushkaBuyChange = staraGrushka.buy - staraGrushka.buy
   const grushkaSaleChange = novaGrushka.sale - staraGrushka.sale
 
-  const message = `USD - UAH:  Купують по ${noveYabko.buy}. Продають по ${noveYabko.sale}. \n
-Різниця відносно попереднього: купівля ${yabkoBuyChange}. Продаж ${yabkoSaleChange} \n \n
+  const message = `USD - UAH:  Купують по ${ noveYabko.buy }. Продають по ${ noveYabko.sale }. \n
+Різниця відносно попереднього: купівля ${ yabkoBuyChange }. Продаж ${ yabkoSaleChange } \n \n
 EUR - UAH:  Купують по ${ staraGrushka.buy }. Продають по ${ novaGrushka.sale }. \\n
 Різниця відносно попереднього: купівля ${ grushkaBuyChange }. Продаж ${ grushkaSaleChange } \\n \\n`
 
 
   console.log(message);
+
+  await axios.post('https://slack.com/api/chat.postMessage',
+    {
+      channel: '',
+      text: message
+    },
+    {
+      headers: {
+        "Authorization": 'token'
+      }
+    })
 
   previousData = result.data
 }
