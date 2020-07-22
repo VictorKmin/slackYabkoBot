@@ -8,14 +8,14 @@ let previousData = [
   {
     ccy: "USD",
     base_ccy: "UAH",
-    buy: "27.30000",
-    sale: "27.90000"
+    buy: "28.30000",
+    sale: "28.90000"
   },
   {
     ccy: "EUR",
     base_ccy: "UAH",
-    buy: "31.20000",
-    sale: "31.80000"
+    buy: "32.20000",
+    sale: "32.80000"
   }
 ];
 
@@ -27,46 +27,76 @@ cron.schedule('0 15 * * *', async () => {
   await yabkoGetter();
 }, {});
 
-// cron.schedule('* * * * *', async () => {
-//   await yabkoGetter();
-// }, {});
+cron.schedule('* * * * *', async () => {
+  await yabkoGetter();
+}, {});
 
 
-app.listen(3333, () => {
+app.listen(3333, async () => {
   console.log('3333');
+
+  if (!previousData.length) {
+    const result = await axios.get('https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5');
+    previousData = result.data
+
+    await yabkoGetter();
+  }
 })
 
 async function yabkoGetter() {
-  const result = await axios.get('https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5');
-  console.log(result.data);
+  try {
+    const result = await axios.get('https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5');
 
-  const [stareYabko, staraGrushka] = previousData
-  const [noveYabko, novaGrushka] = result.data
+    const [stareYabko, staraGrushka] = previousData
+    const [noveYabko, novaGrushka] = result.data
 
-  const yabkoBuyChange = noveYabko.buy - stareYabko.buy
-  const yabkoSaleChange = noveYabko.sale - stareYabko.sale
+    const yabkoBuyChange = smailAdd(okruglator(noveYabko.buy) - okruglator(stareYabko.buy))
+    const yabkoSaleChange = smailAdd(okruglator(noveYabko.sale) - okruglator(stareYabko.sale))
 
-  const grushkaBuyChange = staraGrushka.buy - staraGrushka.buy
-  const grushkaSaleChange = novaGrushka.sale - staraGrushka.sale
-
-  const message = `USD - UAH:  Купують по ${ noveYabko.buy }. Продають по ${ noveYabko.sale }. \n
-Різниця відносно попереднього: купівля ${ yabkoBuyChange }. Продаж ${ yabkoSaleChange } \n \n
-EUR - UAH:  Купують по ${ staraGrushka.buy }. Продають по ${ novaGrushka.sale }. \\n
-Різниця відносно попереднього: купівля ${ grushkaBuyChange }. Продаж ${ grushkaSaleChange } \\n \\n`
+    const grushkaBuyChange = smailAdd(okruglator(novaGrushka.buy) - okruglator(staraGrushka.buy ))
+    const grushkaSaleChange = smailAdd(okruglator(novaGrushka.sale) - okruglator(staraGrushka.sale))
 
 
-  console.log(message);
+    const message = ` ${new Date().toLocaleString()} \n
+:dollar: USD - UAH:  Купують по ${ okruglator(noveYabko.buy) }. Продають по ${ okruglator(noveYabko.sale) }. \n
+Різниця відносно попереднього: Купівля ${ yabkoBuyChange }. Продаж ${ yabkoSaleChange } \n \n
+:euro: EUR - UAH:  Купують по ${ novaGrushka.buy }. Продають по ${ novaGrushka.sale}. \n
+Різниця відносно попереднього: Купівля ${ grushkaBuyChange }. Продаж ${ grushkaSaleChange} \n \n
+_____________________________________________________________ \n`
 
-  await axios.post('https://slack.com/api/chat.postMessage',
-    {
-      channel: '',
-      text: message
-    },
-    {
-      headers: {
-        "Authorization": 'token'
-      }
-    })
 
-  previousData = result.data
+    console.log(message);
+
+    await axios.post('https://slack.com/api/chat.postMessage',
+      {
+        channel: '#chatbot',
+        text: message
+      },
+      {
+        headers: {
+          "Content-type": 'application/json',
+          "Authorization": 'Bearer xoxb-12'
+        }
+      })
+
+    previousData = result.data
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function okruglator(number) {
+  return (Math.round(number  * 100) / 100)
+}
+
+function smailAdd(kurs) {
+  if (kurs > 0) {
+    kurs = '+' + okruglator(kurs) + ' :chart_with_upwards_trend: '
+  } else if (kurs < 0) {
+    kurs = okruglator(kurs) + ':chart_with_downwards_trend: '
+  } else {
+    kurs = okruglator(kurs) + ' :heavy_minus_sign: '
+  }
+
+  return kurs;
 }
