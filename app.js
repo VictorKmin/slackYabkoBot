@@ -19,9 +19,9 @@ let previousData = [
   }
 ];
 
-cron.schedule('0 9 * * *', async () => {
-  await yabkoGetter()
-}, {});
+// cron.schedule('0 9 * * *', async () => {
+//   await yabkoGetter()
+// }, {});
 
 cron.schedule('0 15 * * *', async () => {
   await yabkoGetter();
@@ -69,7 +69,7 @@ _____________________________________________________________ \n`
 
     await axios.post('https://slack.com/api/chat.postMessage',
       {
-        channel: '#chatbot',
+        channel: '#e-market',
         text: message
       },
       {
