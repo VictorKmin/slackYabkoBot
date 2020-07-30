@@ -6,11 +6,7 @@ const app = express();
 
 let previousData = [];
 
-// cron.schedule('0 9 * * *', async () => {
-//   await yabkoGetter()
-// }, {});
-
-cron.schedule('0 15 * * *', async () => {
+cron.schedule('0 10 * * *', async () => {
   await yabkoGetter();
 }, {});
 
