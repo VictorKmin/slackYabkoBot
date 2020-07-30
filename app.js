@@ -14,10 +14,6 @@ cron.schedule('0 15 * * *', async () => {
   await yabkoGetter();
 }, {});
 
-cron.schedule('* * * * *', async () => {
-  await yabkoGetter();
-}, {});
-
 
 app.listen(3333, async () => {
   console.log('3333');
