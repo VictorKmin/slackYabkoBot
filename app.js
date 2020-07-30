@@ -4,8 +4,7 @@ const axios = require('axios');
 
 const app = express();
 
-let previousData = [
-];
+let previousData = [];
 
 // cron.schedule('0 9 * * *', async () => {
 //   await yabkoGetter()
