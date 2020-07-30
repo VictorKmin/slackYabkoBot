@@ -5,18 +5,6 @@ const axios = require('axios');
 const app = express();
 
 let previousData = [
-  {
-    ccy: "USD",
-    base_ccy: "UAH",
-    buy: "28.30000",
-    sale: "28.90000"
-  },
-  {
-    ccy: "EUR",
-    base_ccy: "UAH",
-    buy: "32.20000",
-    sale: "32.80000"
-  }
 ];
 
 // cron.schedule('0 9 * * *', async () => {
